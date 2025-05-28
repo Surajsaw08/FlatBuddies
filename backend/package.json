@@ -4,7 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "postinstall": "prisma generate --schema=./db/schema.prisma",
+    "postinstall": "prisma generate --schema=./db/prisma/schema.prisma",
+
     "start": "node ./app.js",
     "dev": "nodemon ./app.js"
   },
