@@ -1,0 +1,89 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  username      String         @unique
+  email         String         @unique @default("default@example.com")
+  phone         String?
+  password      String
+  gender        Gender?
+  age           Int?
+  preferences   Preference?
+  listings      Flat[]         @relation("UserFlats")
+  flatmatePosts FlatmatePost[]
+  bookmarks     Bookmark[]
+  createdAt     DateTime       @default(now())
+}
+
+model Flat {
+  id              String     @id @default(uuid())
+  title           String
+  description     String
+  city            String
+  address         String
+  verified        Boolean    @default(true)
+  rent            Int
+  availableFrom   DateTime
+  postedBy        User       @relation("UserFlats", fields: [postedById], references: [id])
+  postedById      String
+  roommates       Int
+  preferredGender Gender
+  isAvailable     Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  bookmarks       Bookmark[]
+}
+
+model FlatmatePost {
+  id              String     @id @default(uuid())
+  user            User       @relation(fields: [userId], references: [id])
+  userId          String
+  city            String
+  budgetMin       Int
+  budgetMax       Int
+  ageMin          Int
+  ageMax          Int
+  preferredGender Gender
+  moveInDate      DateTime
+  occupation      String?
+  habits          String?
+  description     String?
+  createdAt       DateTime   @default(now())
+  bookmarks       Bookmark[]
+}
+
+model Preference {
+  id              String  @id @default(uuid())
+  city            String?
+  budgetMin       Int?
+  budgetMax       Int?
+  preferredGender Gender?
+  user            User    @relation(fields: [userId], references: [id])
+  userId          String  @unique
+}
+
+model Bookmark {
+  id             String        @id @default(uuid())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String
+  flat           Flat?         @relation(fields: [flatId], references: [id])
+  flatId         String?
+  flatmatePost   FlatmatePost? @relation(fields: [flatmatePostId], references: [id])
+  flatmatePostId String?
+  createdAt      DateTime      @default(now())
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  ANY
+}
