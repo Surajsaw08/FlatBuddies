@@ -6,9 +6,9 @@
   
    
    "scripts": {
-  "postinstall": "prisma generate --schema=./db/prisma/prisma.schema",
+  "postinstall": "npx prisma generate --schema=./db/prisma/prisma.schema",
   "start": "node index.js",
-  "postdeploy": "prisma migrate deploy --schema=./db/prisma/prisma.schema"
+  "postdeploy": "npx prisma migrate deploy --schema=./db/prisma/prisma.schema"
 
 
   },
