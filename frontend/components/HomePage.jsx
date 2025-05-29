@@ -203,6 +203,7 @@ import FAQ from "../LnadingPage_components/Faqs";
 import Testimonials from "../LnadingPage_components/Testimonial";
 import IndianCulture from "../LnadingPage_components/IndianCultures";
 import Footer from "../LnadingPage_components/Footer";
+import Cities from "../LnadingPage_components/Cities";
 
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState("flats");
@@ -364,6 +365,7 @@ const HomePage = () => {
         }
         loading={activeTab === "flats" ? loading.flats : loading.flatmates}
       />
+      <Cities />
       <Testimonials />
       <FAQ />
       <IndianCulture />

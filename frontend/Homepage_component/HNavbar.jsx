@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 const HNavbar = ({ user }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const handlenavigatehomepage = () => {
+    navigate("/homepage");
+  };
 
   const userletter = user?.data.username?.charAt(0).toUpperCase() || "login";
   const handleAuth = () => {
@@ -21,7 +24,11 @@ const HNavbar = ({ user }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Brand */}
-          <a href="#" className="flex items-center flex-shrink-0">
+          <a
+            href="#"
+            className="flex items-center flex-shrink-0"
+            onClick={handlenavigatehomepage}
+          >
             <span className="text-2xl font-bold gradient-text">
               FlatBuddies
             </span>

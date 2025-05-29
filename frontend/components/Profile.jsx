@@ -297,7 +297,10 @@ const ProfilePage = () => {
       <nav className="bg-white shadow-md px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="text-2xl font-bold text-orange-600 flex items-center">
+            <div
+              className="text-2xl font-bold text-orange-600 flex items-center"
+              onClick={handlenavigatehomepage}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 mr-2"

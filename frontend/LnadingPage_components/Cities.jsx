@@ -71,9 +71,9 @@ const Cities = () => {
         </div>
 
         <div className="mt-10 text-center">
-          <button className="gradient-cta text-white px-8 py-3 rounded-lg text-lg font-medium hover:opacity-90 transition-opacity duration-300">
+          {/* <button className="gradient-cta text-white px-8 py-3 rounded-lg text-lg font-medium hover:opacity-90 transition-opacity duration-300">
             Explore All Cities
-          </button>
+          </button> */}
         </div>
       </div>
     </section>

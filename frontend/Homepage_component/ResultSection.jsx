@@ -399,70 +399,75 @@ const FlatCard = ({ flat, gradient, badge }) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-const handleInterest = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Please login to show interest');
-      return;
-    }
-
-    setIsLoading(true);
-
-    // 1. Get current user
-    const userResponse = await axios.get('http://localhost:3000/api/user/userdata', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const currentUser = userResponse.data.data;
-
-    // 2. Get flat owner email
-    const flatResponse = await axios.get(`http://localhost:3000/api/user/flat/${flat.id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const ownerEmail = flatResponse.data.data.postedBy.email;
-
-    if (!ownerEmail) {
-      throw new Error("Owner email not found");
-    }
-
-    // 3. Send notification
-    const response = await axios.post(
-      'http://localhost:3000/api/user/send-to-owner',
-      {
-        interestedUser: {
-          username: currentUser.username,
-          email: currentUser.email,
-          phone: currentUser.phone,
-          age: currentUser.age
-        },
-        flatOwnerEmail: ownerEmail,
-        flatDetails: {
-          title: flat.title,
-          city: flat.city,
-          address: flat.address
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+  const handleInterest = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login to show interest");
+        return;
       }
-    );
 
-    if (response.data.success) {
-      alert('Owner notified successfully!');
-    } else {
-      throw new Error(response.data.message);
+      setIsLoading(true);
+
+      // 1. Get current user
+      const userResponse = await axios.get(
+        "http://localhost:3000/api/user/userdata",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const currentUser = userResponse.data.data;
+
+      // 2. Get flat owner email
+      const flatResponse = await axios.get(
+        `http://localhost:3000/api/user/flat/${flat.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const ownerEmail = flatResponse.data.data.postedBy.email;
+
+      if (!ownerEmail) {
+        throw new Error("Owner email not found");
+      }
+
+      // 3. Send notification
+      const response = await axios.post(
+        "http://localhost:3000/api/user/send-to-owner",
+        {
+          interestedUser: {
+            username: currentUser.username,
+            email: currentUser.email,
+            phone: currentUser.phone,
+            age: currentUser.age,
+          },
+          flatOwnerEmail: ownerEmail,
+          flatDetails: {
+            title: flat.title,
+            city: flat.city,
+            address: flat.address,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        alert("Owner notified successfully!");
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Full error:", error.response?.data || error.message);
+      alert(`Failed: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsLoading(false);
     }
-
-  } catch (error) {
-    console.error('Full error:', error.response?.data || error.message);
-    alert(`Failed: ${error.response?.data?.message || error.message}`);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden card-hover transform transition-transform duration-300 hover:-translate-y-2">
@@ -533,6 +538,66 @@ const FlatmateCard = ({ flatmate, gradient, badge }) => {
         .filter((item) => item)
     : [];
 
+  // const handleContact = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) {
+  //       alert("Please login to contact");
+  //       return;
+  //     }
+
+  //     setIsLoading(true);
+
+  //     // Get current user details
+  //     const userResponse = await axios.get(
+  //       "http://localhost:3000/api/user/userdata",
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+
+  //     const currentUser = userResponse.data.data;
+
+  //     const flatmateResponse = await axios.get(
+  //       `http://localhost:3000/api/user/flatmate/${flatmate.id}`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     const flatmateEmail = flatmateResponse.data.data.postedBy.email;
+
+  //     // Send contact request
+  //     await axios.post(
+  //       "http://localhost:3000/api/user/send-to-flatmate",
+  //       {
+  //         interestedUser: {
+  //           username: currentUser.username,
+  //           email: currentUser.email,
+  //           phone: currentUser.phone,
+  //           age: currentUser.age,
+  //         },
+  //         flatmateEmail: flatmateEmail,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     alert("Your contact request has been sent to the flatmate!");
+  //   } catch (error) {
+  //     console.error("Error contacting flatmate:", error);
+  //     alert(
+  //       error.response?.data?.message ||
+  //         "Failed to send contact request. Please try again."
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleContact = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -553,6 +618,16 @@ const FlatmateCard = ({ flatmate, gradient, badge }) => {
 
       const currentUser = userResponse.data.data;
 
+      // Get flatmate post and owner's email
+      const flatmateResponse = await axios.get(
+        `http://localhost:3000/api/user/flatmate/${flatmate.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const flatmateEmail = flatmateResponse.data.data.user.email;
+
       // Send contact request
       await axios.post(
         "http://localhost:3000/api/user/send-to-flatmate",
@@ -563,7 +638,7 @@ const FlatmateCard = ({ flatmate, gradient, badge }) => {
             phone: currentUser.phone,
             age: currentUser.age,
           },
-          flatmateEmail: flatmate.email,
+          flatmateEmail: flatmateEmail,
         },
         {
           headers: {

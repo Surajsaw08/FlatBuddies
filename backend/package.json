@@ -5,13 +5,13 @@
   "type": "module",
   
    
-   "scripts": {
+  "scripts": {
   "postinstall": "npx prisma generate --schema=./db/prisma/schema.prisma",
-  "start": "node index.js",
+  "start": "node app.js",
+  "dev": "nodemon app.js",
   "postdeploy": "npx prisma migrate deploy --schema=./db/prisma/schema.prisma"
+},
 
-
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
