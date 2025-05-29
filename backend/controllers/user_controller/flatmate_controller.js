@@ -74,3 +74,74 @@ export const getFlatmateBySearch = async (req, res) => {
     });
   }
 };
+
+export const getUserFlatmates = async (req, res) => {
+  try {
+    const userId = req.user.id; // From your middleware
+
+    const flatmates = await prisma.flatmatePost.findMany({
+      where: {
+        userId: userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User flatmates fetched successfully",
+      data: flatmates,
+    });
+  } catch (error) {
+    console.error("Error fetching user flatmates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+export const deleteFlatmate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Verify the flatmate post belongs to the user
+    const flatmate = await prisma.flatmatePost.findUnique({
+      where: { id },
+    });
+
+    if (!flatmate || flatmate.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own flatmate posts",
+      });
+    }
+
+    await prisma.flatmatePost.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Flatmate post deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting flatmate post:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

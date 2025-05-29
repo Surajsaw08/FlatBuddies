@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import axios from "axios";
+import { useState } from "react";
 
-const ResultsSection = ({ activeTab, results = [], loading }) => {
+const UserResultsSection = ({ activeTab, results = [], loading, onDelete }) => {
   const safeResults = Array.isArray(results) ? results : [];
 
   const gradients = [
@@ -69,23 +68,23 @@ const ResultsSection = ({ activeTab, results = [], loading }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            {activeTab === "flats" ? "Available Flats" : "Available Flatmates"}
+            Your {activeTab === "flats" ? "Listed Flats" : "Flatmate Posts"}
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             {activeTab === "flats"
-              ? "Browse through our curated selection of flats across India."
-              : "Connect with potential flatmates who match your preferences."}
+              ? "Manage your listed flats"
+              : "Manage your flatmate posts"}
           </p>
         </div>
 
         {safeResults.length === 0 ? (
           <div className="text-center py-12">
             <h3 className="text-xl font-medium text-gray-600">
-              No {activeTab === "flats" ? "flats" : "flatmates"} found matching
-              your criteria
+              No {activeTab === "flats" ? "flats" : "flatmate posts"} found
             </h3>
             <p className="text-gray-500 mt-2">
-              Try adjusting your search filters
+              You haven't posted any{" "}
+              {activeTab === "flats" ? "flats" : "flatmate posts"} yet
             </p>
           </div>
         ) : (
@@ -98,6 +97,7 @@ const ResultsSection = ({ activeTab, results = [], loading }) => {
                   gradient={getRandomGradient(index)}
                   badge={getRandomBadge(index)}
                   tags={flatTags}
+                  onDelete={() => onDelete(item.id, "flat")}
                 />
               ) : (
                 <FlatmateCard
@@ -106,6 +106,7 @@ const ResultsSection = ({ activeTab, results = [], loading }) => {
                   gradient={getRandomGradient(index)}
                   badge={getRandomBadge(index)}
                   tags={flatmateTags}
+                  onDelete={() => onDelete(item.id, "flatmate")}
                 />
               )
             )}
@@ -116,8 +117,9 @@ const ResultsSection = ({ activeTab, results = [], loading }) => {
   );
 };
 
-const FlatCard = ({ flat, gradient, badge }) => {
+const FlatCard = ({ flat, gradient, badge, onDelete }) => {
   const [isLoading, setIsLoading] = useState(false);
+
   const descriptionTags = flat.description
     ? flat.description
         .split(",")
@@ -130,71 +132,17 @@ const FlatCard = ({ flat, gradient, badge }) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const handleInterest = async () => {
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this flat listing?")) {
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to show interest");
-        return;
-      }
-
       setIsLoading(true);
-
-      // 1. Get current user
-      const userResponse = await axios.get(
-        "http://localhost:3000/api/user/userdata",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const currentUser = userResponse.data.data;
-
-      // 2. Get flat owner email
-      const flatResponse = await axios.get(
-        `http://localhost:3000/api/user/flat/${flat.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const ownerEmail = flatResponse.data.data.postedBy.email;
-
-      if (!ownerEmail) {
-        throw new Error("Owner email not found");
-      }
-
-      // 3. Send notification
-      const response = await axios.post(
-        "http://localhost:3000/api/user/send-to-owner",
-        {
-          interestedUser: {
-            username: currentUser.username,
-            email: currentUser.email,
-            phone: currentUser.phone,
-            age: currentUser.age,
-          },
-          flatOwnerEmail: ownerEmail,
-          flatDetails: {
-            title: flat.title,
-            city: flat.city,
-            address: flat.address,
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.data.success) {
-        alert("Owner notified successfully!");
-      } else {
-        throw new Error(response.data.message);
-      }
+      await onDelete();
     } catch (error) {
-      console.error("Full error:", error.response?.data || error.message);
-      alert(`Failed: ${error.response?.data?.message || error.message}`);
+      console.error("Error deleting flat:", error);
+      alert("Failed to delete flat. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -247,21 +195,22 @@ const FlatCard = ({ flat, gradient, badge }) => {
           )}
         </div>
         <button
-          onClick={handleInterest}
+          onClick={handleDelete}
           disabled={isLoading}
-          className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg hover:opacity-90 transition-opacity duration-300 ${
+          className={`w-full bg-gradient-to-r from-red-600 to-rose-600 text-white py-2 rounded-lg hover:opacity-90 transition-opacity duration-300 ${
             isLoading ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
-          {isLoading ? "Sending..." : "Show Interest"}
+          {isLoading ? "Deleting..." : "Remove Listing"}
         </button>
       </div>
     </div>
   );
 };
 
-const FlatmateCard = ({ flatmate, gradient, badge }) => {
+const FlatmateCard = ({ flatmate, gradient, badge, onDelete }) => {
   const [isLoading, setIsLoading] = useState(false);
+
   const habitTags = flatmate.habits
     ? flatmate.habits
         .split(",")
@@ -269,123 +218,19 @@ const FlatmateCard = ({ flatmate, gradient, badge }) => {
         .filter((item) => item)
     : [];
 
-  // const handleContact = async () => {
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     if (!token) {
-  //       alert("Please login to contact");
-  //       return;
-  //     }
+  const handleDelete = async () => {
+    if (
+      !window.confirm("Are you sure you want to delete this flatmate post?")
+    ) {
+      return;
+    }
 
-  //     setIsLoading(true);
-
-  //     // Get current user details
-  //     const userResponse = await axios.get(
-  //       "http://localhost:3000/api/user/userdata",
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-
-  //     const currentUser = userResponse.data.data;
-
-  //     const flatmateResponse = await axios.get(
-  //       `http://localhost:3000/api/user/flatmate/${flatmate.id}`,
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-  //     const flatmateEmail = flatmateResponse.data.data.postedBy.email;
-
-  //     // Send contact request
-  //     await axios.post(
-  //       "http://localhost:3000/api/user/send-to-flatmate",
-  //       {
-  //         interestedUser: {
-  //           username: currentUser.username,
-  //           email: currentUser.email,
-  //           phone: currentUser.phone,
-  //           age: currentUser.age,
-  //         },
-  //         flatmateEmail: flatmateEmail,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-
-  //     alert("Your contact request has been sent to the flatmate!");
-  //   } catch (error) {
-  //     console.error("Error contacting flatmate:", error);
-  //     alert(
-  //       error.response?.data?.message ||
-  //         "Failed to send contact request. Please try again."
-  //     );
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  const handleContact = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to contact");
-        return;
-      }
-
       setIsLoading(true);
-
-      // Get current user details
-      const userResponse = await axios.get(
-        "http://localhost:3000/api/user/userdata",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const currentUser = userResponse.data.data;
-
-      // Get flatmate post and owner's email
-      const flatmateResponse = await axios.get(
-        `http://localhost:3000/api/user/flatmate/${flatmate.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const flatmateEmail = flatmateResponse.data.data.user.email;
-
-      // Send contact request
-      await axios.post(
-        "http://localhost:3000/api/user/send-to-flatmate",
-        {
-          interestedUser: {
-            username: currentUser.username,
-            email: currentUser.email,
-            phone: currentUser.phone,
-            age: currentUser.age,
-          },
-          flatmateEmail: flatmateEmail,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      alert("Your contact request has been sent to the flatmate!");
+      await onDelete();
     } catch (error) {
-      console.error("Error contacting flatmate:", error);
-      alert(
-        error.response?.data?.message ||
-          "Failed to send contact request. Please try again."
-      );
+      console.error("Error deleting flatmate post:", error);
+      alert("Failed to delete flatmate post. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -436,13 +281,13 @@ const FlatmateCard = ({ flatmate, gradient, badge }) => {
           ))}
         </div>
         <button
-          onClick={handleContact}
+          onClick={handleDelete}
           disabled={isLoading}
-          className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg hover:opacity-90 transition-opacity duration-300 ${
+          className={`w-full bg-gradient-to-r from-red-600 to-rose-600 text-white py-2 rounded-lg hover:opacity-90 transition-opacity duration-300 ${
             isLoading ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
-          {isLoading ? "Sending..." : "Contact"}
+          {isLoading ? "Deleting..." : "Remove Post"}
         </button>
       </div>
     </div>
@@ -464,4 +309,4 @@ const LocationIcon = () => (
   </svg>
 );
 
-export default ResultsSection;
+export default UserResultsSection;

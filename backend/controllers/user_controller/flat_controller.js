@@ -70,3 +70,75 @@ export const getFlatBySearch = async (req, res) => {
     });
   }
 };
+
+export const getUserFlats = async (req, res) => {
+  try {
+    const userId = req.user.id; // From your middleware
+
+    const flats = await prisma.flat.findMany({
+      where: {
+        postedById: userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        postedBy: {
+          select: {
+            username: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User flats fetched successfully",
+      data: flats,
+    });
+  } catch (error) {
+    console.error("Error fetching user flats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+
+export const deleteFlat = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Verify the flat belongs to the user
+    const flat = await prisma.flat.findUnique({
+      where: { id },
+    });
+
+    if (!flat || flat.postedById !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own flats",
+      });
+    }
+
+    await prisma.flat.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting flat:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
